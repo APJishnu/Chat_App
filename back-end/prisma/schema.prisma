@@ -1,0 +1,33 @@
+// src/prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"   // Or "mysql" based on your database
+  url      = env("DATABASE_URL")  // URL to the database (to be defined in .env)
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  userName     String   @unique
+  email        String   @unique
+  phoneNumber  String   @unique
+  profileImage String?
+  password     String
+  messagesSent Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
+}
+
+model Message {
+  id           Int      @id @default(autoincrement())
+  text         String
+  timestamp    DateTime @default(now())
+  senderId     Int
+  recipientId  Int
+  sender       User     @relation("MessagesSent", fields: [senderId], references: [id])
+  recipient    User     @relation("MessagesReceived", fields: [recipientId], references: [id])
+}

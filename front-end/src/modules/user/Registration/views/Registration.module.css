@@ -1,0 +1,163 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 40px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+
+}
+
+.steps {
+  margin-bottom: 30px;
+  margin-top: 20px;
+ 
+}
+/* Error message styling */
+.errorMessage {
+  color: #ff4d4f; /* Red error color (Ant Design theme color) */
+  padding: 0px 1px; /* Add padding for spacing */
+  border-radius: 5px; /* Rounded corners for a smooth look */
+  font-size: 14px; /* Adjust font size for readability */
+  margin-top: -20px; /* Space above the error */
+  opacity: 0; /* Start with 0 opacity for animation */
+  transform: translateY(-10px); /* Slight slide up effect */
+  transition: opacity 0.8s ease, transform 0.8s ease; /* Smooth transition */
+}
+
+.errorMessage span{
+  font-size: 10px!important;
+}
+
+/* Class to trigger the error message */
+.showError {
+  opacity: 1; /* Show error with full opacity */
+  transform: translateY(0); /* Slide back into place */
+}
+
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  width: 450px;
+  max-width: 450px;
+  background-color: #fff;
+  padding: 10px 30px;
+  padding-bottom: 20px;
+  border-radius: 20px;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.208);
+}
+
+.title {
+  font-size: 28px;
+  color: var(--accent-color);
+  font-weight: 600;
+  letter-spacing: -1px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+}
+
+.title::before,
+.title::after {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  left: 0px;
+  background-color: var(--accent-color);
+}
+
+.title::before {
+  width: 18px;
+  height: 18px;
+}
+
+.title::after {
+  width: 18px;
+  height: 18px;
+  animation: pulse 1s linear infinite;
+}
+
+.message,
+.signin {
+  color: rgba(88, 87, 87, 0.822);
+  font-size: 14px;
+}
+
+.signin {
+  text-align: center;
+}
+
+.signin a {
+  color: var(--accent-color);
+}
+
+.signin a:hover {
+  text-decoration: underline var(--accent-color);
+}
+
+.flex {
+  display: flex;
+  width: 100%;
+  gap: 5px;
+  justify-content: space-between;
+}
+
+.form label {
+  position: relative;
+}
+
+/* Updated input styles */
+.input,
+.ant-input-password {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-bottom: 1px solid var(--secondary-color);
+  border-radius: 0;
+  background-color: var(--secondary-color);
+  color: var(--accent-color);
+  transition: border-color 0.3s ease;
+}
+
+.input:focus,
+.ant-input-password:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.submit {
+  border: none;
+  outline: none;
+  background-color: var(--accent-color);
+  padding: 15px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.submit:hover {
+  background-color: rgb(56, 90, 194);
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
