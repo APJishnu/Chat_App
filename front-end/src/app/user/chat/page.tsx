@@ -1,11 +1,12 @@
 "use client";
-
-import Chat from '@/modules/user/Chat/components/Chat';
 import React from 'react';
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
+import { useCurrentUserId } from '../../../context/useContext'; // Import the hook to access the currentUserId
+import Chat from '@/modules/user/Chat/components/Chat';
 
 const Page = () => {
   const searchParams = useSearchParams();
+  const currentUserId = useCurrentUserId(); // Get currentUserId from context
   
   // Get recipientId from the search params and convert it to a number
   const recipientId = searchParams.get("recipientId");
@@ -18,9 +19,14 @@ const Page = () => {
     return <div>Invalid recipient ID</div>; // or redirect to an error page, etc.
   }
 
+  // Make sure currentUserId is not null or undefined before passing it
+  if (!currentUserId) {
+    return <div>User not logged in</div>; // Handle if currentUserId is not available
+  }
+
   return (
-    <div className="min-h-screen ">
-      <Chat recipientId={recipientIdNumber} /> {/* Pass the valid recipientId */}
+    <div className="min-h-screen">
+      <Chat recipientId={recipientIdNumber} currentUserId={parseInt(currentUserId, 10)} /> {/* Pass currentUserId and recipientId */}
     </div>
   );
 };

@@ -3,28 +3,32 @@
 import { gql } from "apollo-server-express";
 
 const chatTypeDefs = gql`
+
+  directive @defer on FIELD
+  directive @stream on FIELD_DEFINITION
+
   type User {
     id: ID!
     firstName: String!
     lastName: String!
-    userName: String!
-    email: String!
+    userName: String! 
+    email: String! 
     phoneNumber: String!
-    profileImage: String
+    profileImage: String 
+
   }
 
   type Message {
     id: Int
-    text: String
+    text: String 
     timestamp: String
     sender: User
     recipient: User
-    isCurrentUser: Boolean
   }
 
 
   type Query {
-    getMessages(recipientId: Int!): [Message]
+    getMessages(recipientId: Int!): [Message] @stream
     getUsers: [User] 
     getUser(userName: String!): User
   }

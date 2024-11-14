@@ -1,4 +1,5 @@
 
+import { UserProvider } from "@/context/useContext";
 import "./globals.css";
 import { Metadata } from "next";
 
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+      <UserProvider>
        {children}
+      </UserProvider>
       </body>
     </html>
   );
