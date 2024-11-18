@@ -2,10 +2,9 @@
 
 import { prisma } from "../../../../../prisma/client.js";
 
-function formatMessage(message, currentUserId) {
+function formatMessage(message) {
   return {
     ...message,
-    isCurrentUser: message.senderId === currentUserId,
     timestamp: message.timestamp.toISOString(), // Format timestamp as ISO string
   };
 }
@@ -35,30 +34,15 @@ class ChatRepository {
             { senderId: recipientId, recipientId: userId },
           ],
         },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              userName: true,
-              profileImage: true,
-            },
-          },
-          recipient: {
-            select: {
-              id: true,
-              userName: true,
-              profileImage: true,
-            },
-          },
-        },
+       
         orderBy: {
           timestamp: "asc",
         },
       });
 
       // Format each message using formatMessage helper
-      const formattedMessages = messages.map((message) => formatMessage(message, userId));
-
+      const formattedMessages = messages.map((message) => formatMessage(message));
+      console.log("hello:   ",formattedMessages);
       return formattedMessages;
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -66,22 +50,19 @@ class ChatRepository {
     }
   }
 
-  static async saveMessage(text, senderId, recipientId) {
+  static async saveMessage(text, imageUrl, senderId, recipientId) {
     try {
       const newMessage = await prisma.message.create({
         data: {
           text,
+          imageUrl, // Save the image URL if provided
           senderId,
           recipientId,
         },
-        include: {
-          sender: { select: { id: true, userName: true, profileImage: true } },
-          recipient: { select: { id: true, userName: true, profileImage: true } },
-        },
       });
-
+  
       // Format the new message using formatMessage helper
-      return formatMessage(newMessage, senderId);
+      return formatMessage(newMessage);
     } catch (error) {
       console.error("Error saving message:", error);
       throw new Error("Failed to save message to the database");

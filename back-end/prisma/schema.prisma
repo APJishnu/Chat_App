@@ -1,5 +1,3 @@
-// src/prisma/schema.prisma
-
 datasource db {
   provider = "postgresql"   // Or "mysql" based on your database
   url      = env("DATABASE_URL")  // URL to the database (to be defined in .env)
@@ -24,10 +22,17 @@ model User {
 
 model Message {
   id           Int      @id @default(autoincrement())
-  text         String
+  text         String?
+  imageUrl     String?
+  type         MessageType @default(TEXT)  // Message type (text/image)
   timestamp    DateTime @default(now())
   senderId     Int
   recipientId  Int
   sender       User     @relation("MessagesSent", fields: [senderId], references: [id])
   recipient    User     @relation("MessagesReceived", fields: [recipientId], references: [id])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
 }

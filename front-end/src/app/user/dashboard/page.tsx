@@ -1,42 +1,55 @@
 "use client"
 
-
-import Login from '@/modules/user/Login/views/Login';
+import React, { useState} from 'react';
 import UserList from '@/modules/user/UserList/components/UserList';
-import React,{ useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
+import Chat from '@/modules/user/Chat/components/Chat';
+
+
+const Dashboard = () => {
+  const [selectedRecipientId, setSelectedRecipientId] = useState<number | null>(null);
+  const [selectedRecipientuserName, setSelectedRecipientUserName] = useState("");
+  const [selectedRecipientProfileImage,setSelectedRecipientProfileImage] = useState("");
 
 
 
-const page =() => {
-  const [authToken, setAuthtoken] = useState(""); // Store user ID after login
-  const [recipientId, setRecipientId] = useState<number | null>(null); // Store recipient ID for chat
 
-  useEffect(() => {
-    const token = Cookies.get("userToken"); 
-    if (token) {
-      setAuthtoken(token);
-    }
-  }, []);
-
-  const handleSelectUser = (id: number) => {
-    setRecipientId(id);
-
-    setTimeout(()=>{
-        window.location.href = `/user/chat?recipientId=${id}`
-    })
+  const handleSelectUser = (id: number,userName:string,profileImage:string) => {
+    setSelectedRecipientId(id);
+    setSelectedRecipientUserName(userName);
+    setSelectedRecipientProfileImage(profileImage);
   };
 
+ 
 
   return (
-    <div>
-      {!authToken ? (
-        <Login />
-      ) : !recipientId && (
-        <UserList onSelectUser={handleSelectUser} />
-      )}
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Sidebar - UserList */}
+      <div className="w-1/4 border-r">
+        <UserList
+          onSelectUser={handleSelectUser} 
+          selectedUserId={selectedRecipientId}
+        />
+      </div>
+
+      {/* Right Side - Chat */}
+      <div className="w-3/4">
+        {selectedRecipientId ? (
+          <Chat
+            recipientId={selectedRecipientId} 
+            recipientUserName = {selectedRecipientuserName}
+            recipientProfileImage = {selectedRecipientProfileImage}
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <h3 className="text-xl font-medium mb-2">Welcome to Chat</h3>
+              <p>Select a user to start a conversation</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default page;
+export default Dashboard;

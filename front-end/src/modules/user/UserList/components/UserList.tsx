@@ -1,8 +1,8 @@
 "use client";
-import React from 'react';
-import { useQuery, gql } from '@apollo/client';
-import apolloClient from '@/lib/apollo-client';
-import './UserList.css'
+import React from "react";
+import { useQuery, gql } from "@apollo/client";
+import apolloClient from "@/lib/apollo-client";
+import styles from "./UserList.module.css"; // Import the CSS module
 
 // GraphQL Query
 export const GET_USERS = gql`
@@ -10,6 +10,7 @@ export const GET_USERS = gql`
     getUsers {
       id
       userName
+      profileImage
     }
   }
 `;
@@ -18,38 +19,54 @@ export const GET_USERS = gql`
 export interface User {
   id: number;
   userName: string;
+  profileImage?: string;
 }
 
 // UserListProps Interface
 export interface UserListProps {
-  onSelectUser: (id: number) => void;
+  onSelectUser: (id: number,userName:string,profileImage:string) => void;
+  selectedUserId: number | null;
 }
-
-// UserList Component
-const UserList: React.FC<UserListProps> = ({ onSelectUser }) => {
+// Updated UserList Component
+const UserList: React.FC<UserListProps> = ({onSelectUser,selectedUserId}) => {
   const { data, loading, error } = useQuery(GET_USERS, {
     client: apolloClient,
   });
 
-  if (loading) return <p>Loading users...</p>;
-  if (error) return <p>Error loading users!</p>;
+  console.log(data);
+
+  if (loading) return <p className="p-4">Loading users...</p>;
+  if (error) return <p className="p-4 text-red-500">Error loading users!</p>;
 
   return (
-    <div className="user-list-container">
-      <h3>Select a user to chat with:</h3>
-      <div className="user-list">
+    <div className={styles.userListContainer}>
+      <h3 className={styles.userListHeader}>Chats</h3>
+      <div className={styles.userList}>
         {data.getUsers.map((user: User) => (
           <div
             key={user.id}
-            className="user-item"
-            onClick={() => onSelectUser(user.id)}
+            className={`${styles.userItem} ${
+              selectedUserId === user.id ? styles.selected : ""
+            }`}
+            onClick={() => onSelectUser(user.id,user.userName,user.profileImage?user.profileImage :"")}
           >
-            <div className="user-avatar">
-              <span>{user.userName[0]}</span> {/* Display first letter as avatar */}
+            <div className={styles.userAvatar}>
+              {user.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt={user.userName}
+                  className={styles.avatarImage}
+                />
+              ) : (
+                <span className={styles.avatarFallback}>
+                  {user.userName[0]}
+                </span>
+              )}
             </div>
-            <div className="user-details">
-              <span className="user-name">{user.userName}</span>
-              {/* Optionally, you can add a "Last Message" or "Status" here */}
+            <div className={styles.userDetails}>
+              <span className={styles.userName}>
+                {user.userName || "Unknown User"}
+              </span>
             </div>
           </div>
         ))}

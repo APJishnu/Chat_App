@@ -1,12 +1,13 @@
 import ChatController from '../controller/chat-controller.js';
 import { PubSub } from 'graphql-subscriptions';
 import ChatRepository from '../repositories/chat-repository.js';
+import { GraphQLUpload } from 'graphql-upload';
 
 const pubsub = new PubSub();
-
 const CHAT_CHANNEL = 'CHAT_CHANNEL';
 
 const chatResolvers = {
+  Upload: GraphQLUpload,
   Query: {
     getMessages: async (_, { recipientId }, { userId }) => {
       if (!userId) {
@@ -29,23 +30,24 @@ const chatResolvers = {
       return user;
     },
   },
-  
+
   Mutation: {
-    sendMessage: async (_, { text, recipientId }, { userId }) => {
+    sendMessage: async (_, { text, image, recipientId }, { userId }) => {
       if (!userId) {
         throw new Error("User not authenticated");
       }
 
-      const response = await ChatController.sendMessage(text, userId, recipientId);
-      
+      const response = await ChatController.sendMessage(text, image, userId, recipientId);
+
+      console.log("haii")
       if (response.success) {
         const message = response.data;
         // Publish to a single channel with payload containing all necessary info
         pubsub.publish(CHAT_CHANNEL, {
           messageSent: {
             ...message,
-            channelId: `${userId}:${recipientId}`
-          }
+            channelId: `${userId}:${recipientId}`,
+          },
         });
         return message;
       }
@@ -60,7 +62,6 @@ const chatResolvers = {
           throw new Error("User not authenticated for subscription");
         }
 
-        // Create filter function to handle message routing
         const filter = (payload) => {
           const { channelId } = payload.messageSent;
           const [senderId, receiverId] = channelId.split(':');
@@ -70,16 +71,15 @@ const chatResolvers = {
           );
         };
 
-        // Subscribe to the main channel and yield messages that pass the filter
         const iterator = pubsub.asyncIterator([CHAT_CHANNEL]);
         for await (const payload of iterator) {
           if (filter(payload)) {
             yield payload;
           }
         }
-      }
-    }
-  }
+      },
+    },
+  },
 };
 
 export default chatResolvers;

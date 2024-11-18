@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import { gql, useMutation } from "@apollo/client";
 import apolloClient from "@/lib/apollo-client";
@@ -49,7 +51,7 @@ const LoginForm = ({ onLogin }: { onLogin: (token: string) => void }) => {
 
       if (data?.loginUser?.token) {
         onLogin(data.loginUser.token);
-        alert("Login successful!");
+        window.location.href = "/user/dashboard"
       }
     } catch (error: any) {
       console.error("Login error:", error);

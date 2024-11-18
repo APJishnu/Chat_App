@@ -8,6 +8,9 @@ import jwt from 'jsonwebtoken';
 import { typeDefs, resolvers } from './graphql/schema.js';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
+import path from 'path'
+import { fileURLToPath } from 'url';
+import { graphqlUploadExpress } from "graphql-upload";
 
 // Set up environment variables for security and flexibility
 const PORT = process.env.PORT || 5000;
@@ -23,9 +26,12 @@ app.use(
   cors({
     origin: FRONTEND_URL,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
 // Create schema from type definitions and resolvers
 const schema = makeExecutableSchema({
@@ -58,6 +64,14 @@ const server = new ApolloServer({
   subscriptions: false, // Disable default subscriptions handling in Apollo Server
 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+const da = path.join(__dirname, '../uploads')
+console.log(da)
+
+app.use('/uploads',express.static(path.join(__dirname, '/uploads')))
 // Function to start the Apollo Server and handle WebSocket setup
 const startServer = async () => {
   await server.start();
@@ -77,11 +91,12 @@ const startServer = async () => {
     schema,
     context: async (ctx) => {
       // Get the token from the connection params
-      const token = ctx.connectionParams?.authorization || '';
+      const token = ctx.connectionParams?.Authorization || '';
       const userId = getUserFromToken(token);
 
+  
+      console.log(token,"hai")
       console.log(userId)
-      console.log(token)
       return { userId, pubsub }; // Set user ID in context for subscriptions
     },
   }, wsServer);

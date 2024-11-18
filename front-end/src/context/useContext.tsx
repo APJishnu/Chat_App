@@ -1,5 +1,11 @@
-"use client"
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+"use client";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { getUserToken, decodeUserToken } from "../utils/cookies";
 
 // Define the type for the context value
