@@ -32,12 +32,12 @@ const chatResolvers = {
   },
 
   Mutation: {
-    sendMessage: async (_, { text, image, recipientId }, { userId }) => {
+    sendMessage: async (_, { text, image, audio, recipientId }, { userId }) => {
       if (!userId) {
         throw new Error("User not authenticated");
       }
 
-      const response = await ChatController.sendMessage(text, image, userId, recipientId);
+      const response = await ChatController.sendMessage(text, image,audio, userId, recipientId);
 
       console.log("haii")
       if (response.success) {

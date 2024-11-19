@@ -50,12 +50,14 @@ class ChatRepository {
     }
   }
 
-  static async saveMessage(text, imageUrl, senderId, recipientId) {
+  static async saveMessage(text, imageUrl,audioUrl, senderId, recipientId) {
+    console.log(imageUrl)
     try {
       const newMessage = await prisma.message.create({
         data: {
           text,
-          imageUrl, // Save the image URL if provided
+          imageUrl, 
+          audioUrl,
           senderId,
           recipientId,
         },

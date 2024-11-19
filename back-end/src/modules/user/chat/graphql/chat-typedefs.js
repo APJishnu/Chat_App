@@ -24,6 +24,7 @@ const chatTypeDefs = gql`
     id: Int
     text: String
     imageUrl: String
+    audioUrl:String
     type: MessageType
     timestamp: String
     senderId:Int
@@ -37,7 +38,7 @@ const chatTypeDefs = gql`
   }
 
   type Mutation {
-    sendMessage(text: String, image: Upload, recipientId: Int!): Message
+    sendMessage(text: String, image: Upload , audio: Upload  , recipientId: Int!): Message
   }
 
   type Subscription {

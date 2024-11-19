@@ -27,6 +27,15 @@
   background-color: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+}
+
+.chatHeaderActions {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+  max-width: 140px;
 }
 
 .recipientInfo {
@@ -53,19 +62,17 @@
   justify-content: center;
 }
 
-
 .avatarFallback {
   font-size: 18px;
   font-weight: bold;
   color: #fff;
-  background-color: #007bff;
+  background-color: #1e4165;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
- 
 }
 
 .recipientInfo h2 {
@@ -100,22 +107,25 @@
 .messageBubble {
   max-width: 65%;
   padding: 8px 12px;
-  border-radius: 8px;
   position: relative;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
 .messageSent .messageBubble {
-  background-color: #005c4b;
+  background-color: #1e4165;
   color: white;
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
 }
 
 .messageReceived .messageBubble {
-  background-color: white;
+  background-color: rgb(205, 205, 205);
   color: #1a1a1a;
-  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 
 .messageTimestamp {
@@ -127,7 +137,7 @@
 }
 
 .messageImageContainer {
-  margin-top: 8px;
+  margin-top: 5px;
   position: relative;
 }
 
@@ -136,43 +146,45 @@
   border-radius: 8px;
   transition: filter 0.3s ease;
   max-height: 200px;
-
 }
 
 .messageImageLoading {
-  filter: blur(4px);
+  filter: blur(10px);
   opacity: 0.7;
 }
 
-.imagePreview {
+/* New Styles for File Attachments */
+.filePreviewsContainer {
   position: absolute;
   bottom: 70px;
-  left: 0;
+  left: 0px;
   right: 0;
   background: white;
   padding: 16px;
   border-top: 1px solid #e0e0e0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
   animation: slideUp 0.3s ease-out;
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+.filePreview {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
 }
 
-.imagePreview img {
-  max-height: 200px;
-  margin: 0 auto;
-  display: block;
+.filePreview img,
+.filePreview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 8px;
 }
 
-.imagePreviewClose {
+.filePreviewClose {
   position: absolute;
   top: -8px;
   right: -8px;
@@ -189,8 +201,108 @@
   font-size: 16px;
   padding: 0;
   line-height: 1;
+  z-index: 1;
 }
 
+/* Camera Styles */
+.cameraContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: black;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.cameraView {
+  flex: 1;
+  width: 50%;
+  object-fit: cover;
+}
+
+.cameraControls {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.captureButton,
+.closeButton {
+  padding: 12px 24px;
+  border-radius: 24px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.captureButton {
+  background-color: #4caf50;
+}
+
+.closeButton {
+  background-color: #f44336;
+}
+
+.captureButton:hover {
+  background-color: #45a049;
+}
+
+.closeButton:hover {
+  background-color: #da190b;
+}
+
+/* Attachment Menu Styles */
+.attachmentContainer {
+  position: relative;
+}
+
+.attachmentMenu {
+  position: absolute;
+  bottom: 100%;
+  left: 5px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-width: 200px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.attachmentOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.attachmentOption:hover {
+  background-color: #f0f2f5;
+}
+
+.attachmentOption svg {
+  font-size: 1.2rem;
+}
+
+/* Message Input Area */
 .messageInput {
   display: flex;
   align-items: center;
@@ -199,6 +311,13 @@
   background: white;
   border-top: 1px solid #e0e0e0;
   position: relative;
+}
+
+.emojiPickerContainer {
+  position: absolute;
+  bottom: 80px;
+  left: 2px;
+  z-index: 100;
 }
 
 .emojiButton,
@@ -210,6 +329,9 @@
   cursor: pointer;
   font-size: 1.5rem;
   transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .emojiButton:hover,
@@ -228,4 +350,254 @@
   border-radius: 24px;
   outline: none;
   font-size: 0.95rem;
+}
+
+.sendButton {
+  padding: 8px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #1e4165;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sendButton:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.sendButton:not(:disabled):hover {
+  color: #0056b3;
+}
+
+/* Upload Progress */
+.uploadProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #f0f2f5;
+}
+
+.uploadProgressBar {
+  height: 100%;
+  background-color: #2c4e73;
+  transition: width 0.3s ease;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .messageBubble {
+    max-width: 80%;
+  }
+
+  .chatHeaderActions {
+    gap: 20px;
+  }
+
+  .attachmentMenu {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatHeader {
+    padding: 12px;
+  }
+
+  .messageInput {
+    padding: 8px;
+  }
+
+  .messageInputField {
+    padding: 8px;
+  }
+
+  .attachmentOption {
+    padding: 8px;
+  }
+}
+
+/* audio rec */
+
+.recordingContainer {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  background-color: #f0f2f5;
+  border-radius: 20px;
+  padding: 8px 12px;
+  margin: 0 8px;
+}
+
+.recordingWave {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  color: #e91e63;
+  font-size: 14px;
+}
+
+.recordingDot {
+  width: 10px;
+  height: 10px;
+  background-color: #e91e63;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: pulse 1s infinite;
+}
+
+.recordingControl {
+  background: none;
+  border: none;
+  color: #666;
+  padding: 4px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.recordingControl:hover {
+  color: #e91e63;
+}
+
+.recordingPreview {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  background-color: #f0f2f5;
+  border-radius: 20px;
+  padding: 8px 12px;
+  margin: 0 8px;
+}
+
+.recordingPreview audio {
+  flex: 1;
+  height: 40px;
+}
+
+.recordButton {
+  background: none;
+  border: none;
+  color: #128c7e;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: color 0.2s;
+  font-size: 20px;
+}
+
+.recordButton:hover {
+  color: #075e54;
+}
+
+.recordButton.recording {
+  color: #e91e63;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Toast.module.css */
+.popup {
+  background-color: #fcfdff !important; /* Dark background */
+  color: #ffffff !important; /* White text */
+  border-radius: 8px !important; /* Rounded corners */
+  font-family: "Arial", sans-serif; /* Custom font */
+  padding: 10px 20px !important; /* Add padding */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 10px;
+}
+
+.icon {
+  color: #ff4d4f !important; /* Change the error icon color */
+  font-size: 10px;
+}
+
+.title {
+  font-weight: bold !important; /* Make the title bold */
+  font-size: 0.7rem !important; /* Adjust font size */
+  margin: 0 !important;
+  color: black; /* Remove margin */
+}
+
+.progressBar {
+  background-color: #ff4d4f !important; /* Custom progress bar color */
+  height: 2px !important; /* Increase progress bar height */
+}
+
+@media (max-width: 768px) {
+  .chatHeader {
+    padding-left: 40px;
+    padding-right: 0px;
+  }
+  .chatHeaderActions {
+    gap: 30px;
+    width: 100%;
+    max-width: 120px;
+  }
+
+  .recordingPreview {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    padding: 2px 5px;
+    margin: 0 0px;
+    max-width: 220px;
+    width: 100%;
+  }
+
+  .recordingPreview audio {
+    flex: 1;
+    height: 40px;
+  }
+  .messageInput {
+    display: flex;
+    gap: 0px;
+    justify-content: space-between;
+  }
 }

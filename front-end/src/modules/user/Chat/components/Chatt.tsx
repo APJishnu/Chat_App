@@ -1,116 +1,105 @@
-// Chat.tsx
-"use client";
-import React, { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useSubscription, gql } from "@apollo/client";
-import apolloClient from "@/lib/apollo-client";
-import EmojiPicker from "emoji-picker-react";
-import styles from "./Chat.module.css";
-import { useCurrentUserId } from "@/context/useContext";
-import { ChatProps, Message, AttachmentFile } from "../interfaces/chat-types";
-import {
-  PhoneOutlined,
-  VideoCameraOutlined,
-  SearchOutlined,
-  PaperClipOutlined,
-  SendOutlined,
-  AudioOutlined,
-  CameraOutlined,
-  PictureOutlined,
-  FileOutlined,
-  EnvironmentOutlined,
-  CloseOutlined,
-  PauseCircleOutlined,
-  DeleteOutlined,
-  PlayCircleOutlined,
-} from "@ant-design/icons";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+  // Chat.tsx
+  "use client";
 
-const MySwal = withReactContent(Swal);
+  import React, { useState, useEffect, useRef } from "react";
+  import { useQuery, useMutation, useSubscription, gql } from "@apollo/client";
+  import apolloClient from "@/lib/apollo-client";
+  import EmojiPicker from "emoji-picker-react";
+  import styles from "./Chat.module.css";
+  import { useCurrentUserId } from "@/context/useContext";
+  import { ChatProps, Message, AttachmentFile } from "../interfaces/chat-types";
+  import {
+    PhoneOutlined,
+    VideoCameraOutlined,
+    SearchOutlined,
+    PaperClipOutlined,
+    SendOutlined,
+    AudioOutlined,
+    CameraOutlined,
+    PictureOutlined,
+    FileOutlined,
+    EnvironmentOutlined,
+    CloseOutlined,
+    PauseCircleOutlined,
+    DeleteOutlined,
+  } from "@ant-design/icons";
+  import Swal from "sweetalert2";
+  import withReactContent from "sweetalert2-react-content";
 
-const GET_MESSAGES = gql`
-  query GetMessages($recipientId: Int!) {
-    getMessages(recipientId: $recipientId) {
-      id
-      text
-      imageUrl
-      audioUrl
-      timestamp
-      senderId
+  const MySwal = withReactContent(Swal);
+
+  // GraphQL queries remain the same
+  const GET_MESSAGES = gql`
+    query GetMessages($recipientId: Int!) {
+      getMessages(recipientId: $recipientId) {
+        id
+        text
+        imageUrl
+        audioUrl
+        timestamp
+        senderId
+      }
     }
-  }
-`;
+  `;
 
-const SEND_MESSAGE = gql`
-  mutation SendMessage(
-    $text: String
-    $image: Upload
-    $audio: Upload
-    $recipientId: Int!
-  ) {
-    sendMessage(
-      text: $text
-      image: $image
-      audio: $audio
-      recipientId: $recipientId
-    ) {
-      id
-      text
-      imageUrl
-      audioUrl
-      timestamp
-      senderId
+  const SEND_MESSAGE = gql`
+    mutation SendMessage($text: String!, $image: Upload, $audio:Upload, $recipientId: Int!) {
+      sendMessage(text: $text, image: $image, audio: $audio, recipientId: $recipientId) {
+        id
+        text
+        imageUrl
+        audioUrl
+        timestamp
+        senderId
+      }
     }
-  }
-`;
+  `;
 
-const MESSAGE_SUBSCRIPTION = gql`
-  subscription MessageSent($recipientId: Int!) {
-    messageSent(recipientId: $recipientId) {
-      id
-      text
-      imageUrl
-      audioUrl
-      timestamp
-      senderId
+  const MESSAGE_SUBSCRIPTION = gql`
+    subscription MessageSent($recipientId: Int!) {
+      messageSent(recipientId: $recipientId) {
+        id
+        text
+        imageUrl
+        audioUrl
+        timestamp
+        senderId
+      }
     }
-  }
-`;
+  `;
 
-const Chat: React.FC<ChatProps> = ({
-  recipientId,
-  recipientUserName,
-  recipientProfileImage,
-}) => {
-  const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<AttachmentFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [showCamera, setShowCamera] = useState(false);
+  const Chat: React.FC<ChatProps> = ({
+    recipientId,
+    recipientUserName,
+    recipientProfileImage,
+  }) => {
+    const [message, setMessage] = useState<string>("");
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState<AttachmentFile[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [showCamera, setShowCamera] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
+    const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
+    const [recordingDuration, setRecordingDuration] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const [showRecordingPreview, setShowRecordingPreview] = useState(false);
 
-  // Audio states
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [showRecordingPreview, setShowRecordingPreview] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const audioPlayerRef = useRef<HTMLAudioElement>(null);
+    const multipleFileInputRef = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
+    const cameraRef = useRef<HTMLVideoElement>(null);
+    const currentUserIdString = useCurrentUserId();
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Refs
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const multipleFileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLVideoElement>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const currentUserIdString = useCurrentUserId();
   const currentUserId = Number(currentUserIdString);
 
   const {
@@ -129,9 +118,6 @@ const Chat: React.FC<ChatProps> = ({
     onCompleted: () => {
       setMessage("");
       setSelectedFiles([]);
-      setAudioBlob(null);
-      setAudioUrl(null);
-      setShowRecordingPreview(false);
       setIsUploading(false);
     },
     onError: (error) => {
@@ -145,6 +131,9 @@ const Chat: React.FC<ChatProps> = ({
         timer: 3000,
         timerProgressBar: true,
       });
+      console.error("Error accessing microphone:", error);
+
+      setIsUploading(false);
     },
   });
 
@@ -159,7 +148,10 @@ const Chat: React.FC<ChatProps> = ({
           if (!messageExists) {
             return [
               ...prev,
-              { ...newMessage, timestamp: new Date(newMessage.timestamp) },
+              {
+                ...newMessage,
+                timestamp: new Date(newMessage.timestamp),
+              },
             ];
           }
           return prev;
@@ -167,6 +159,7 @@ const Chat: React.FC<ChatProps> = ({
       }
     },
   });
+
 
   useEffect(() => {
     if (queryData?.getMessages) {
@@ -176,7 +169,7 @@ const Chat: React.FC<ChatProps> = ({
       }));
       setMessages(formattedMessages);
     }
-  }, [queryData]);
+  }, [queryData, currentUserId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -264,7 +257,48 @@ const Chat: React.FC<ChatProps> = ({
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Audio Recording Functions
+  const handleSendMessage = async () => {
+    console.log("hai")
+    console.log(audioBlob)
+    if (message.trim() === "" && selectedFiles.length === 0) return;
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => Math.min(prev + 10, 90));
+    }, 200);
+
+    try {
+      const firstFile = selectedFiles[0]?.file;
+      const audioToSend = audioBlob || null;
+      await sendMessage({
+        variables: {
+          text: message,
+          image: firstFile,
+          audio: audioToSend,
+          recipientId: Number(recipientId),
+        },
+      });
+
+      console.log(audioUrl)
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      clearInterval(progressInterval);
+      setUploadProgress(0);
+    }
+  };
+
+  // Function to format recording duration
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Start recording with preview
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -272,9 +306,7 @@ const Chat: React.FC<ChatProps> = ({
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+        audioChunksRef.current.push(event.data);
       };
 
       mediaRecorderRef.current.onstop = () => {
@@ -282,20 +314,19 @@ const Chat: React.FC<ChatProps> = ({
           type: "audio/wav",
         });
         setAudioBlob(audioBlob);
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
+        setAudioUrl(URL.createObjectURL(audioBlob));
         setShowRecordingPreview(true);
         setIsRecordingInProgress(false);
-
         if (durationTimerRef.current) {
           clearInterval(durationTimerRef.current);
         }
       };
 
-      mediaRecorderRef.current.start(200); // Collect data every 200ms
+      mediaRecorderRef.current.start();
       setIsRecordingInProgress(true);
       setRecordingDuration(0);
 
+      // Start duration timer
       durationTimerRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
@@ -309,7 +340,14 @@ const Chat: React.FC<ChatProps> = ({
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          popup: styles.popup,
+          icon: styles.icon,
+          title: styles.title,
+          timerProgressBar: styles.progressBar,
+        },
       });
+      console.error("Error accessing microphone:", error);
     }
   };
 
@@ -357,53 +395,7 @@ const Chat: React.FC<ChatProps> = ({
     setRecordingDuration(0);
   };
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleSendMessage = async () => {
-    if (!message.trim() && selectedFiles.length === 0 && !audioBlob) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => Math.min(prev + 10, 90));
-    }, 200);
-
-    try {
-      const variables: any = {
-        recipientId: Number(recipientId),
-      };
-
-      if (message.trim()) {
-        variables.text = message;
-      }
-
-      if (selectedFiles.length > 0) {
-        variables.image = selectedFiles[0].file;
-      }
-
-      if (audioBlob) {
-        // Create a File object from the audio blob
-        const audioFile = new File([audioBlob], "audio-message.wav", {
-          type: "audio/wav",
-        });
-        variables.audio = audioFile;
-      }
-
-      await sendMessage({ variables });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      clearInterval(progressInterval);
-      setUploadProgress(0);
-    }
-  };
+  // ..
 
   if (loading)
     return <div className={styles.loadingContainer}>Loading chat...</div>;
@@ -431,13 +423,25 @@ const Chat: React.FC<ChatProps> = ({
           <h2>{recipientUserName}</h2>
         </div>
         <div className={styles.chatHeaderActions}>
-          <button className={styles.actionButton}>
+          <button
+            onClick={() => alert("Feature not implemented!")}
+            title="Make a Call"
+            className={styles.actionButton}
+          >
             <PhoneOutlined />
           </button>
-          <button className={styles.actionButton}>
+          <button
+            onClick={() => alert("Feature not implemented!")}
+            title="Make a Video Call"
+            className={styles.actionButton}
+          >
             <VideoCameraOutlined />
           </button>
-          <button className={styles.actionButton}>
+          <button
+            onClick={() => alert("Search functionality coming soon!")}
+            title="Search"
+            className={styles.actionButton}
+          >
             <SearchOutlined />
           </button>
         </div>
@@ -461,17 +465,15 @@ const Chat: React.FC<ChatProps> = ({
                   <img
                     src={msg.imageUrl}
                     alt="Message attachment"
-                    className={styles.messageImage}
+                    className={`${styles.messageImage} ${
+                      isUploading ? styles.messageImageLoading : ""
+                    }`}
                   />
                 </div>
               )}
-              {msg.audioUrl && (
+               {msg.audioUrl && (
                 <div className={styles.audioMessage}>
-                  <audio
-                    controls
-                    src={msg.audioUrl}
-                    className={styles.audioPlayer}
-                  ></audio>
+                  <audio controls src={msg.audioUrl}></audio>
                 </div>
               )}
               <span className={styles.messageTimestamp}>
@@ -519,7 +521,7 @@ const Chat: React.FC<ChatProps> = ({
         </div>
       )}
 
-      {/* Message Input Area */}
+      {/* Message Input */}
       <div className={styles.messageInput}>
         <button
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -591,7 +593,6 @@ const Chat: React.FC<ChatProps> = ({
           )}
         </div>
 
-        {/* Recording UI */}
         {isRecordingInProgress ? (
           <div className={styles.recordingContainer}>
             <div className={styles.recordingWave}>
@@ -602,16 +603,13 @@ const Chat: React.FC<ChatProps> = ({
               onClick={pauseRecording}
               className={styles.recordingControl}
             >
-              {isPaused ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
-            </button>
-            <button onClick={stopRecording} className={styles.recordingControl}>
-              <SendOutlined />
+              <PauseCircleOutlined />
             </button>
             <button
               onClick={cancelRecording}
               className={styles.recordingControl}
             >
-              <DeleteOutlined />
+              <CloseOutlined />
             </button>
           </div>
         ) : showRecordingPreview ? (
@@ -623,39 +621,33 @@ const Chat: React.FC<ChatProps> = ({
             >
               <DeleteOutlined />
             </button>
-            <button
-              onClick={handleSendMessage}
-              className={styles.recordingControl}
-            >
-              <SendOutlined />
-            </button>
           </div>
         ) : (
-          <>
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-              className={styles.messageInputField}
-            />
-            {message.trim() || selectedFiles.length > 0 ? (
-              <button onClick={handleSendMessage} className={styles.sendButton}>
-                <SendOutlined />
-              </button>
-            ) : (
-              <button
-                onClick={startRecording}
-                className={`${styles.recordButton} ${
-                  isRecordingInProgress ? styles.recording : ""
-                }`}
-              >
-                <AudioOutlined />
-              </button>
-            )}
-          </>
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type a message..."
+            className={styles.messageInputField}
+          />
+        )}
+
+        {message.trim() || selectedFiles.length > 0 || showRecordingPreview ? (
+          <button onClick={handleSendMessage} className={styles.sendButton}>
+            <SendOutlined />
+          </button>
+        ) : (
+          <button
+            onClick={startRecording}
+            className={`${styles.recordButton} ${
+              isRecordingInProgress ? styles.recording : ""
+            }`}
+          >
+            <AudioOutlined />
+          </button>
         )}
       </div>
+
       {/* Upload Progress */}
       {isUploading && (
         <div className={styles.uploadProgress}>

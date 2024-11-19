@@ -1,0 +1,70 @@
+.dashboardContainer {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+}
+
+/* Welcome message when no chat is selected */
+.welcomeMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #a0aec0;
+}
+
+/* Desktop view */
+@media screen and (min-width: 768px) {
+  .dashboardContainer {
+    flex-direction: row;
+  }
+
+  .userListSidebar {
+    width: 30%;
+   
+    border-right: 1px solid #e2e8f0;
+    display: block;
+    transition: all 0.3s ease;
+  }
+
+  .chatSidebar {
+    width: 70%;
+  }
+  .backButton {
+    display: none;
+  }
+}
+
+/* Mobile View */
+@media screen and (max-width: 767px) {
+  .userListSidebar {
+    display: block;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .userListSidebar.hidden {
+    display: none; /* Hide UserList when in chat mode */
+  }
+
+  .chatSidebar {
+    display: block;
+  }
+  .welcomeMessage {
+    display: none;
+  }
+}
+
+/* Back Button in Chat */
+.backButton {
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 0px;
+  top: 10px;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 20;
+}

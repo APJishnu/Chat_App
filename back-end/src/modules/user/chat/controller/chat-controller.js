@@ -2,6 +2,8 @@
 import ChatRepository from '../repositories/chat-repository.js';
 import cloudinary from 'cloudinary';
 import { Readable } from 'stream';
+import crypto from 'crypto';
+
 
 // Configure Cloudinary
 cloudinary.v2.config({
@@ -9,6 +11,38 @@ cloudinary.v2.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+
+// Encryption and Decryption utilities
+const encryptionKey = process.env.ENCRYPTION_KEY;
+console.log(encryptionKey) 
+const iv = crypto.randomBytes(16);
+function encrypt(text) {
+  try {
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey, 'hex'), iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + encrypted;
+  } catch (error) {
+    console.error("Encryption Error:", error);
+    throw error;
+  }
+}
+
+function decrypt(encryptedText) {
+  try {
+    const ivHex = encryptedText.substring(0, 32);
+    const encryptedMessage = encryptedText.substring(32);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(encryptionKey, 'hex'), Buffer.from(ivHex, 'hex'));
+    let decrypted = decipher.update(encryptedMessage, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    console.error("Decryption Error:", error);
+    throw error;
+  }
+}
+
 
 class ChatController {
   static async getUsers() {
@@ -24,6 +58,14 @@ class ChatController {
   static async getMessages(userId, recipientId, offset, limit) {
     try {
       const messages = await ChatRepository.getMessages(userId, recipientId, offset, limit);
+      messages.forEach(message => {
+        if (message.imageUrl) {
+          message.imageUrl = decrypt(message.imageUrl);
+        }
+        if (message.audioUrl) {
+          message.audioUrl = decrypt(message.audioUrl);
+        }
+      });
       return {
         success: true,
         message: 'Messages retrieved successfully',
@@ -39,84 +81,90 @@ class ChatController {
     }
   }
 
-  static async uploadToCloudinary(file) {
+  static async uploadToCloudinary(file, folder = "chat_files") {
     try {
-      // First, ensure we have a file
-      if (!file) throw new Error('No file provided');
-
-      const { createReadStream, filename, mimetype } = await file;
-      
-      // Validate file type if needed
-      if (!mimetype.startsWith('image/')) {
-        throw new Error('File must be an image');
+      if (!file) throw new Error("No file provided");
+  
+      const { createReadStream, mimetype } = await file;
+  
+      const isAudio = mimetype.startsWith("audio/");
+      const isImage = mimetype.startsWith("image/");
+      if (!isImage && !isAudio) {
+        throw new Error("File must be an image or audio");
       }
-
-      // Create upload promise
+  
       const uploadPromise = new Promise((resolve, reject) => {
         const uploadStream = cloudinary.v2.uploader.upload_stream(
           {
-            folder: 'chat_images',
-            resource_type: 'auto',
+            folder,
+            resource_type: "auto", // Automatically detect file type
           },
           (error, result) => {
             if (error) reject(error);
             else resolve(result.secure_url);
           }
         );
-
-        // Pipe the file stream to the upload stream
+  
         const fileStream = createReadStream();
         fileStream.pipe(uploadStream);
-
-        // Handle stream errors
-        fileStream.on('error', (error) => reject(error));
-        uploadStream.on('error', (error) => reject(error));
+  
+        fileStream.on("error", (error) => reject(error));
+        uploadStream.on("error", (error) => reject(error));
       });
-
+  
       return await uploadPromise;
     } catch (error) {
-      console.error('Cloudinary upload error:', error);
+      console.error("Cloudinary upload error:", error);
       throw error;
     }
   }
-
-  static async sendMessage(text, image, senderId, recipientId) {
+  
+  static async sendMessage(text, image, audio, senderId, recipientId) {
     try {
-      // Check if either text or image exists
-      if (!text && !image) {
-        throw new Error("Message must contain either text or image");
+      if (!text && !image && !audio) {
+        throw new Error("Message must contain text, image, or audio");
       }
-
+  
       let imageUrl = null;
-
-      // Upload image to Cloudinary if it exists
+      let audioUrl = null;
+  
       if (image) {
-        try {
-          imageUrl = await ChatController.uploadToCloudinary(image);
-        } catch (uploadError) {
-          console.error('Error uploading to Cloudinary:', uploadError);
-          throw new Error('Failed to upload image');
-        }
+        imageUrl = await ChatController.uploadToCloudinary(image, "chat_images");
+        imageUrl = encrypt(imageUrl); // Encrypt image URL
+       
       }
+  
+      if (audio) {
+        audioUrl = await ChatController.uploadToCloudinary(audio, "chat_audios");
+        audioUrl = encrypt(audioUrl); // Encrypt audio URL
+      }
+  
+      const newMessage = await ChatRepository.saveMessage(text, imageUrl, audioUrl, senderId, recipientId);
 
-      // Save message with text and/or image URL to database
-      const newMessage = await ChatRepository.saveMessage(text, imageUrl, senderId, recipientId);
+   
+        if ( newMessage.imageUrl) {
+          newMessage.imageUrl = decrypt(newMessage.imageUrl);
+        }
+        if (newMessage.audioUrl) {
+          newMessage.audioUrl = decrypt(newMessage.audioUrl);
       
+        }
+  
       return {
         success: true,
-        message: 'Message sent successfully',
+        message: "Message sent successfully",
         data: newMessage,
       };
     } catch (error) {
-      console.error('Error in sending message:', error);
+      console.error("Error in sending message:", error);
       return {
         success: false,
-        message: error.message || 'Failed to send message',
+        message: error.message || "Failed to send message",
         data: null,
       };
     }
   }
-
+  
 
   // Optional: Method to delete image from Cloudinary
   static async deleteCloudinaryImage(imageUrl) {

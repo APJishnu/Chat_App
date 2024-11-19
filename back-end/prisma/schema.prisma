@@ -24,6 +24,7 @@ model Message {
   id           Int      @id @default(autoincrement())
   text         String?
   imageUrl     String?
+  audioUrl     String? 
   type         MessageType @default(TEXT)  // Message type (text/image)
   timestamp    DateTime @default(now())
   senderId     Int

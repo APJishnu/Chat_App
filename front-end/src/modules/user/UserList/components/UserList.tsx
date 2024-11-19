@@ -2,7 +2,9 @@
 import React from "react";
 import { useQuery, gql } from "@apollo/client";
 import apolloClient from "@/lib/apollo-client";
-import styles from "./UserList.module.css"; // Import the CSS module
+import { Tooltip } from "antd"; // Import Tooltip from Ant Design
+import { SettingOutlined, UserOutlined, ProfileOutlined, InboxOutlined } from '@ant-design/icons'; // Corrected Icons
+import styles from "./UserList.module.css";
 
 // GraphQL Query
 export const GET_USERS = gql`
@@ -24,31 +26,35 @@ export interface User {
 
 // UserListProps Interface
 export interface UserListProps {
-  onSelectUser: (id: number,userName:string,profileImage:string) => void;
+  onSelectUser: (id: number, userName: string, profileImage: string) => void;
   selectedUserId: number | null;
 }
+
 // Updated UserList Component
-const UserList: React.FC<UserListProps> = ({onSelectUser,selectedUserId}) => {
+const UserList: React.FC<UserListProps> = ({ onSelectUser, selectedUserId }) => {
   const { data, loading, error } = useQuery(GET_USERS, {
     client: apolloClient,
   });
-
-  console.log(data);
 
   if (loading) return <p className="p-4">Loading users...</p>;
   if (error) return <p className="p-4 text-red-500">Error loading users!</p>;
 
   return (
     <div className={styles.userListContainer}>
-      <h3 className={styles.userListHeader}>Chats</h3>
+     
       <div className={styles.userList}>
+        <div className={styles.logoWithText}>
+          <img className={styles.logo} src="/logo-2.png" alt="" />
+        <h3 className={styles.userListHeader}>CHATS</h3>
+        </div>
+     
         {data.getUsers.map((user: User) => (
           <div
             key={user.id}
             className={`${styles.userItem} ${
               selectedUserId === user.id ? styles.selected : ""
             }`}
-            onClick={() => onSelectUser(user.id,user.userName,user.profileImage?user.profileImage :"")}
+            onClick={() => onSelectUser(user.id, user.userName, user.profileImage ? user.profileImage : "")}
           >
             <div className={styles.userAvatar}>
               {user.profileImage ? (
@@ -70,6 +76,22 @@ const UserList: React.FC<UserListProps> = ({onSelectUser,selectedUserId}) => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Bottom Container with Icons */}
+      <div className={styles.bottomContainer}>
+        <Tooltip title="Settings">
+          <SettingOutlined className={styles.bottomIcon} />
+        </Tooltip>
+        <Tooltip title="Profile">
+          <UserOutlined className={styles.bottomIcon} />
+        </Tooltip>
+        <Tooltip title="Status">
+          <ProfileOutlined className={styles.bottomIcon} /> {/* Updated Icon */}
+        </Tooltip>
+        <Tooltip title="Archived Chats">
+          <InboxOutlined className={styles.bottomIcon} /> {/* Updated Icon */}
+        </Tooltip>
       </div>
     </div>
   );
